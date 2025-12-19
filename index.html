@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>액상 소울메이트 찾기</title>
     <style>
-        :root { --primary: #6c5ce7; --bg: #f0f2f5; --text: #2d3436; --star: #fdcb6e; }
+        :root { --primary: #E5000D; --bg: #f0f2f5; --text: #111010; --star: #fdcb6e; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; }
         
-        #app { background: white; width: 100%; max-width: 500px; border-radius: 24px; padding: 40px 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); text-align: center; margin: auto; transition: all 0.3s ease; }
+        #app { background: white; width: 100%; max-width: 500px; border-radius: 24px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); text-align: center; margin: auto; transition: all 0.3s ease; }
         
         .step { display: none; animation: fadeIn 0.4s ease-out; }
         .step.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         h1 { font-size: 2.2rem; margin-bottom: 1rem; color: var(--primary); }
-        h3 { font-size: 1.5rem; margin-bottom: 1.5rem; }
-        p { font-size: 1.1rem; line-height: 1.6; color: #636e72; }
+        h3 { font-size: 1.6rem; margin-bottom: 2rem; line-height: 1.4; font-weight: 600; }
+        p { font-size: 1.1rem; line-height: 1.6; color: #555; }
 
         .tag-container { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 25px 0; }
         .tag { border: 2px solid #dfe6e9; padding: 10px 16px; border-radius: 50px; cursor: pointer; font-size: 1rem; background: white; transition: 0.2s; user-select: none; }
@@ -27,46 +28,65 @@
         .label-text { display: block; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; color: #2d3436; }
         .score-row { display: flex; justify-content: space-between; gap: 8px; }
         .score-btn { flex: 1; border: 2px solid #dfe6e9; padding: 15px 0; border-radius: 12px; background: white; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition: 0.2s; user-select: none; }
-        .score-btn.active { background: #a29bfe; color: white; border-color: #a29bfe; }
+        .score-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; cursor: pointer; font-size: 1.2rem; font-weight: bold; box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3); transition: 0.2s; user-select: none; }
+        .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 12px rgba(229, 0, 13, 0.25); transition: 0.2s; user-select: none; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn:active, .score-btn:active, .tag:active { transform: scale(0.96); }
         
+        .rank-number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #e0e0e0;
+            width: 45px;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+
         /* 결과 화면 스타일 */
         #res-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .result-card { 
-            background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 16px; 
+            background: linear-gradient(145deg, #ffffff, #f9f9f9);
+            border: 1px solid #f0f0f0;
+            padding: 20px;
+            border-radius: 20px; 
             display: flex;
             gap: 15px;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.07);
+            transition: transform 0.2s ease-in-out;
+            animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            opacity: 0;
         }
-        .vape-img { width: 100px; height: 100px; background: #f1f1f1; border-radius: 12px; object-fit: contain; flex-shrink: 0; }
+        .result-card:hover {
+            transform: translateY(-5px);
+        }
+        .vape-img { width: 120px; height: 120px; background: #f1f1f1; border-radius: 16px; object-fit: contain; flex-shrink: 0; }
         .vape-info { flex: 1; text-align: left; }
-        .vape-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; color: var(--primary); height: 2.4em; overflow: hidden; line-height: 1.2; }
-        .vape-flavor { font-size: 0.8rem; color: #636e72; margin-bottom: 12px; height: 2.7em; overflow: hidden; }
+        .vape-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 6px; color: #2d3436; }
+        .vape-flavor { font-size: 0.9rem; color: #888; margin-bottom: 15px; }
         
-        .star-box { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .star-box { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .star-label { font-weight: bold; color: #2d3436; font-size: 0.8rem; }
-        .stars { color: var(--star); font-size: 1rem; letter-spacing: 1px; }
+        .stars { color: var(--star); font-size: 1.1rem; letter-spacing: 1px; }
 
         #alert-msg { color: #e74c3c; font-weight: bold; margin-top: 10px; display: none; }
 
         /* 나의 선택 요약 스타일 */
         .summary-box {
-            background: #f7f1ff;
-            border: 1px solid #e0d8ff;
-            padding: 15px;
+            background: #f7f7f7;
+            border: 1px solid #eee;
+            padding: 20px;
             border-radius: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             text-align: left;
+            animation: slideUp 0.5s ease-out forwards;
         }
-        .summary-box h4 { margin: 0 0 10px 0; font-size: 1.1rem; color: var(--primary); text-align: center; font-weight: bold; }
-        .summary-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; margin-bottom: 8px; }
-        .summary-item:last-child { margin-bottom: 0; }
-        .summary-item .label { font-weight: bold; color: #4a4a4a; }
-        .summary-item .value { color: var(--primary); font-weight: bold; background: white; padding: 4px 12px; border-radius: 8px; font-size: 0.95rem; max-width: 60%; word-break: keep-all; text-align: right; }
-        .summary-item .summary-stars { background: none; padding: 0; color: var(--star); font-size: 1.2rem; letter-spacing: 2px; }
+        .summary-box h4 { margin: 0 0 15px 0; font-size: 1.1rem; color: #333; text-align: center; font-weight: 600; }
+        .summary-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #ddd; }
+        .summary-item:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+        .summary-item .label { font-weight: 500; color: #555; }
+        .summary-item .value { color: #111; font-weight: bold; background: none; padding: 0; font-size: 0.95rem; max-width: 65%; word-break: keep-all; text-align: right; }
+        .summary-item .summary-stars { background: none; padding: 0; color: var(--star); font-size: 1.2rem; letter-spacing: 1px; }
 
         /* 모바일 최적화 */
         @media (max-width: 480px) {
@@ -81,7 +101,8 @@
 
 <div id="app">
     <div id="step1" class="step active">
-        <h1>담타 액상 찾기</h1>
+        <img src="https://api.momubox.co.kr/images/originals/1764058538874-%E1%84%83%E1%85%A1%E1%86%B7%E1%84%90%E1%85%A1_%E1%84%89%E1%85%A9%E1%84%89%E1%85%A7%E1%86%AF%E1%84%86%E1%85%B5%E1%84%83%E1%85%B5%E1%84%8B%E1%85%A5-%E1%84%91%E1%85%B3%E1%84%85%E1%85%A9%E1%84%91%E1%85%B5%E1%86%AF-%E1%84%8B%E1%85%B5%E1%84%86%E1%85%B5%E1%84%8C%E1%85%B5.png" alt="로고" style="max-width: 150px; height: auto; margin-bottom: 20px;">
+
         <p>나만의<br>인생 액상을 찾아보세요.</p>
         <button class="btn" onclick="go('1-5')">찾기 시작</button>
     </div>
@@ -118,19 +139,25 @@
     <div id="step3" class="step">
         <h3>취향 수치 선택</h3>
         <div class="option-group"><span class="label-text">🍯 당도 (1~5)</span><div id="sugar-row" class="score-row"></div></div>
-        <div class="option-group"><span class="label-text">❄️ 쿨링 (0~5)</span><div id="ice-row" class="score-row"></div></div>
+        <div class="option-group"><span class="label-text">❄️ 쿨링 (1~5)</span><div id="ice-row" class="score-row"></div></div>
         <div class="option-group"><span class="label-text">⚡ 타격감 (1~5)</span><div id="hit-row" class="score-row"></div></div>
         <button class="btn" onclick="result()">결과 확인하기</button>
     </div>
 
     <div id="step4" class="step">
-        <h3>당신을 위한 추천</h3>
-        <div id="user-selection-summary"></div>
-        <div id="res-list"></div>
-        <button class="btn" onclick="location.reload()" style="margin-top:15px; background:#b2bec3;">다시 하기</button>
+        <div id="capture-area">
+            <img src="https://api.momubox.co.kr/images/originals/1764058538874-%E1%84%83%E1%85%A1%E1%86%B7%E1%84%90%E1%85%A1_%E1%84%89%E1%85%A9%E1%84%89%E1%85%A7%E1%86%AF%E1%84%86%E1%85%B5%E1%84%83%E1%85%B5%E1%84%8B%E1%85%A5-%E1%84%91%E1%85%B3%E1%84%85%E1%85%A9%E1%84%91%E1%85%B5%E1%86%AF-%E1%84%8B%E1%85%B5%E1%84%86%E1%85%B5%E1%84%8C%E1%85%B5.png" alt="로고" style="max-width: 150px; height: auto; margin-bottom: 20px;">
+            <div id="user-selection-summary"></div>
+            <div id="res-list"></div>
+        </div>
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn" onclick="shareResult(event)">결과 이미지로 저장</button>
+            <button class="btn" onclick="location.reload()" style="background:#b2bec3;">다시 하기</button>
+        </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
     // 57종 데이터 (이미지 경로 예시: 'images/제품명.jpg')
     const db = [
@@ -189,7 +216,7 @@
         { n: "엘프리큐 딸기키위", c: ["딸기", "키위"], s: 3, i: 3, h: 2, img: "https://api.momubox.co.kr/images/thumbnails/1747630371627-85_%EB%B9%84%ED%84%B0_%ED%8A%B8%EB%A1%9C%ED%94%BC%EC%B9%BC_%EC%82%AC%EC%9B%8C.webp" }
     ];
 
-    let userSelection = { sugar: 1, ice: 0, hit: 1, gender: null, age: null };
+    let userSelection = { sugar: 1, ice: 1, hit: 1, gender: null, age: null };
     const selTags = new Set();
     const tagBox = document.getElementById('tag-box');
     const alertMsg = document.getElementById('alert-msg');
@@ -224,7 +251,7 @@
         }
     }
     createScoreButtons('sugar-row', 1, 5, 'sugar');
-    createScoreButtons('ice-row', 0, 5, 'ice');
+    createScoreButtons('ice-row', 1, 5, 'ice');
     createScoreButtons('hit-row', 1, 5, 'hit');
 
     function selectGender(gender, element) {
@@ -266,6 +293,29 @@
     function checkFlavorsAndGo(step) { if(selTags.size === 0) { alertMsg.style.display = 'block'; return; } go(step); }
     function go(n) { document.querySelectorAll('.step').forEach(s => s.classList.remove('active')); document.getElementById('step'+n).classList.add('active'); window.scrollTo(0,0); }
 
+    async function shareResult(event) {
+        const shareButton = event.target;
+        shareButton.innerText = '이미지 생성중...';
+        shareButton.disabled = true;
+
+        const captureArea = document.getElementById('capture-area');
+        try {
+            const canvas = await html2canvas(captureArea, {
+                useCORS: true, // 외부 이미지를 캡처하기 위해 필요
+            });
+            const link = document.createElement('a');
+            link.download = '나의-인생액상-추천결과.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (error) {
+            console.error('이미지 생성 실패:', error);
+            alert('이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        } finally {
+            shareButton.innerText = '결과 이미지로 저장';
+            shareButton.disabled = false;
+        }
+    }
+
     async function result() {
         const u = { ...userSelection, c: Array.from(selTags) };
         const res = db.map(l => {
@@ -277,13 +327,13 @@
         const summaryBox = document.getElementById('user-selection-summary');
         summaryBox.innerHTML = `
             <div class="summary-box">
-                <h4>나의 선택</h4>
+                <h4>나의 취향 분석</h4>
                 <div class="summary-item">
                     <span class="label">성별/연령</span>
                     <span class="value">${u.gender} / ${u.age}</span>
                 </div>
                 <div class="summary-item">
-                    <span class="label">😋 선택한 향</span>
+                    <span class="label">선호하는 향</span>
                     <span class="value">${u.c.join(', ')}</span>
                 </div>
                 <div class="summary-item">
@@ -302,14 +352,15 @@
         `;
 
         const box = document.getElementById('res-list');
-        box.innerHTML = '';
-        res.forEach(r => {
-            box.innerHTML += `
-                <div class="result-card">
-                    <img src="${r.img}" class="vape-img" alt="${r.n}" onerror="this.onerror=null; this.src='https://placehold.co/100x100/f1f1f1/777?text=' + encodeURIComponent('${r.n}');">
+        let listHtml = '';
+        res.forEach((r, index) => {
+            listHtml += `
+                <div class="result-card" style="animation-delay: ${index * 0.15 + 0.2}s">
+                    <span class="rank-number">${index + 1}</span>
+                    <img src="${r.img}" class="vape-img" alt="${r.n}" onerror="this.onerror=null; this.src='https://placehold.co/140x140/f1f1f1/777?text=' + encodeURIComponent('${r.n}');">
                     <div class="vape-info">
                         <div class="vape-name">${r.n}</div>
-                        <div class="vape-flavor">구성: ${r.c.join(', ')}</div>
+                        <div class="vape-flavor">${r.c.join(', ')}</div>
                         
                         <div class="star-box">
                             <span class="star-label">🍯 당도</span>
@@ -327,20 +378,21 @@
                 </div>
             `;
         });
+        box.innerHTML = listHtml;
 
-        let telegramMessage = `<b>🚬 액상 소울메이트 추천 결과 🚬</b>\n\n`;
+        let telegramMessage = `<b>액상 추천 데이터</b>\n\n`;
         telegramMessage += `<b>[사용자 선택]</b>\n`;
         telegramMessage += `- 성별: ${u.gender}\n`;
         telegramMessage += `- 연령: ${u.age}\n`;
         telegramMessage += `- 선호향: ${u.c.join(', ')}\n`;
-        telegramMessage += `- 당도: ${'★'.repeat(u.sugar)}${'☆'.repeat(5 - u.sugar)}\n`;
-        telegramMessage += `- 쿨링: ${'★'.repeat(u.ice)}${'☆'.repeat(5 - u.ice)}\n`;
-        telegramMessage += `- 타격감: ${'★'.repeat(u.hit)}${'☆'.repeat(5 - u.hit)}\n\n`;
+        telegramMessage += `- 당도: ${u.sugar}/5\n`;
+        telegramMessage += `- 쿨링: ${u.ice}/5\n`;
+        telegramMessage += `- 타격감: ${u.hit}/5\n\n`;
 
         telegramMessage += `<b>[추천 제품]</b>\n`;
         res.forEach((r, index) => {
             telegramMessage += `${index + 1}. <b>${r.n}</b>\n`;
-            telegramMessage += `   - 구성: ${r.c.join(', ')}\n`;
+            telegramMessage += `   - 향: ${r.c.join(', ')}\n`;
             telegramMessage += `   - 당도: ${r.s}/5, 쿨링: ${r.i}/5, 타격감: ${r.h}/5\n\n`;
         });
 
