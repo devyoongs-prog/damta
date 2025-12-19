@@ -133,7 +133,13 @@
         <h3>선호하는 향 (최대 5개)</h3>
         <div id="tag-box" class="tag-container"></div>
         <div id="alert-msg">최소 1개 이상의 향을 선택하여 주세요.</div>
-        <button class="btn" onclick="checkFlavorsAndGo(3)" style="margin-top: 20px;">다음 단계</button>
+        <button class="btn" onclick="checkFlavorsAndGo('2-5')" style="margin-top: 20px;">다음 단계</button>
+    </div>
+
+    <div id="step2-5" class="step">
+        <h3>피하고 싶은 향이 있나요? (선택)</h3>
+        <div id="dislike-tag-box" class="tag-container"></div>
+        <button class="btn" onclick="go(3)" style="margin-top: 20px;">다음 단계</button>
     </div>
 
     <div id="step3" class="step">
@@ -212,6 +218,7 @@
 
     let userSelection = { sugar: 1, ice: 1, hit: 1, gender: null, age: null };
     const selTags = new Set();
+    const dislikeTags = new Set();
     const tagBox = document.getElementById('tag-box');
     const alertMsg = document.getElementById('alert-msg');
 
@@ -284,12 +291,38 @@
         }
     }
 
-    function checkFlavorsAndGo(step) { if(selTags.size === 0) { alertMsg.style.display = 'block'; return; } go(step); }
+    function checkFlavorsAndGo(step) {
+        if(selTags.size === 0) { alertMsg.style.display = 'block'; return; }
+        
+        if (step === '2-5') {
+            const dislikeBox = document.getElementById('dislike-tag-box');
+            dislikeBox.innerHTML = '';
+            // 전체 향에서 선호하는 향 제외
+            const allFlavors = [...new Set(db.flatMap(i => i.c))].sort();
+            allFlavors.forEach(c => {
+                if (selTags.has(c)) return; // 선호하는 향은 제외
+
+                const t = document.createElement('div');
+                t.className = 'tag' + (dislikeTags.has(c) ? ' selected' : '');
+                t.innerText = c;
+                t.onclick = () => {
+                    if(dislikeTags.has(c)) { dislikeTags.delete(c); t.classList.remove('selected'); }
+                    else { dislikeTags.add(c); t.classList.add('selected'); }
+                };
+                dislikeBox.appendChild(t);
+            });
+        }
+        go(step);
+    }
     function go(n) { document.querySelectorAll('.step').forEach(s => s.classList.remove('active')); document.getElementById('step'+n).classList.add('active'); window.scrollTo(0,0); }
 
     async function result() {
-        const u = { ...userSelection, c: Array.from(selTags) };
-        const res = db.map(l => {
+        const u = { ...userSelection, c: Array.from(selTags), d: Array.from(dislikeTags) };
+        
+        // 비선호 향이 포함된 제품 필터링
+        const filteredDb = db.filter(item => !item.c.some(flavor => dislikeTags.has(flavor)));
+
+        const res = filteredDb.map(l => {
             let match = l.c.filter(x => u.c.includes(x)).length * 15;
             let dist = Math.sqrt(Math.pow(l.s-u.sugar, 2) + Math.pow(l.i-u.ice, 2) + Math.pow(l.h-u.hit, 2));
             return { ...l, score: match - dist };
@@ -306,6 +339,10 @@
                 <div class="summary-item">
                     <span class="label">선호하는 향</span>
                     <span class="value">${u.c.join(', ')}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">제외한 향</span>
+                    <span class="value" style="color:#e74c3c;">${u.d.length > 0 ? u.d.join(', ') : '없음'}</span>
                 </div>
                 <div class="summary-item">
                     <span class="label">🍯 당도</span>
@@ -356,6 +393,7 @@
         telegramMessage += `- 성별: ${u.gender}\n`;
         telegramMessage += `- 연령: ${u.age}\n`;
         telegramMessage += `- 선호향: ${u.c.join(', ')}\n`;
+        telegramMessage += `- 비선호향: ${u.d.length > 0 ? u.d.join(', ') : '없음'}\n`;
         telegramMessage += `- 당도: ${u.sugar}/5\n`;
         telegramMessage += `- 쿨링: ${u.ice}/5\n`;
         telegramMessage += `- 타격감: ${u.hit}/5\n\n`;
